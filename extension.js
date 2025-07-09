@@ -2691,6 +2691,20 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                             callback(false);
                             return;
                         }
+                    // taffy: 补充web端读取文件喵
+                    } else if (typeof resolveLocalFileSystemURL != 'function') {
+                      try {
+                        game.readFile(lib.assetURL + path, (function (name) {
+                          return function (entry) {
+                            callback(true);
+                          }
+                        }(name)), function () {
+                          callback(false);
+                        });
+                      } catch (error) {
+                        callback(false);
+                      }
+                    /* taffy分界线 */
                     } else {
                         resolveLocalFileSystemURL(lib.assetURL + path, (function (name) {
                             return function (entry) {
@@ -5701,6 +5715,11 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                             if (data.action === 'GongJi' || data.action === 'TeShu') {
                                 // 音效默认寻找与待机动作同名的音效
                                 let playName = avatar.player.name
+                                // taffy: 十周年动皮区分不同出框攻击的音效
+                                if (avatar.player.shizhounian) {
+                                  playName = data.action === 'GongJi' ? avatar.player.gongji.audio : avatar.player.teshu.audio;
+                                }
+                                /* taffy分界线 */
                                 // 暂时不区分不同出框攻击的音效.
                                 // 开始播放音效, 音效名等同
                                 // 优先播放十周年同名文件夹下同名的音效文件
@@ -6364,10 +6383,19 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                                     for (let arg of arguments) {  //将参数拼接成一个字符串，方便查找映射
                                         if (typeof arg == 'string' || typeof arg == 'number') {
                                             string = string + "/" + arg;
+                                        // taffy: 修复皮肤语音失效的问题喵
+                                        } else if (get.objtype(arg) === "object") {
+                                            string = string + "/" + arg.path;
+                                        // taffy分界线
                                         } else {
                                             others.push(arg);
                                         }
                                     }
+                                    // taffy: 修复皮肤语音失效的问题喵
+                                    if (string.split('.').length > 1) {
+                                      string = string.substring(0, string.lastIndexOf("."))  //截取文件名
+                                    }
+                                    // taffy分界线
                                     let replaces = string.split('/')
                                     let replace = ''
 
@@ -6445,6 +6473,11 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                                     }
                                     console.log('string...', string)
                                     if (replace.length) {
+                                        // taffy: 修复皮肤语音失效的问题喵
+                                        if (replace.split('.').length > 1) {
+                                          replace = replace.substring(0, replace.lastIndexOf("."))  //截取文件名
+                                        }
+                                        // taffy分界线
                                         let rp = skinSwitch.audioMap[replace];
                                         if (rp) {
                                             //如果存在映射，用映射的路径替换原有的路径，并调用原来的音频播放函数，以达到替换配音的效果。
